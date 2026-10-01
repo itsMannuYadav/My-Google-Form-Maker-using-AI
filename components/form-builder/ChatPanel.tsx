@@ -1,5 +1,6 @@
 "use client";
 
+import { QUICK_EXAMPLES } from "@/lib/useCases";
 import React, { useState, useRef, useEffect } from "react";
 import { ChatMessage } from "@/types/form";
 import { Send, Sparkles, User, Bot, HelpCircle, ArrowRight, Loader2, RefreshCw, Copy, Check, Undo2, Paperclip, X, FileText, Image as ImageIcon } from "lucide-react";
@@ -351,12 +352,7 @@ export default function ChatPanel({
               Quick Examples:
             </p>
             <div className="flex flex-wrap gap-1.5">
-              {[
-                "Registration form for students and teachers",
-                "Feedback survey with ratings 1 to 5",
-                "Scholarship application with personal & academic details",
-                "Staff leave application form",
-              ].map((eg, i) => (
+              {QUICK_EXAMPLES.map((eg, i) => (
                 <button
                   key={i}
                   onClick={() => handleChipClick(eg)}

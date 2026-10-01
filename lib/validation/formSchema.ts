@@ -45,6 +45,8 @@ export const FormQuestionSchema = z.object({
   options: z.array(QuestionOptionSchema).optional(),
   scaleConfig: ScaleConfigSchema.optional(),
   dateConfig: DateConfigSchema.optional(),
+  points: z.number().int().min(0).max(100).optional(),
+  correctAnswers: z.array(z.string()).optional(),
 });
 
 export const FormSectionSchema = z.object({
@@ -59,6 +61,7 @@ export const FormDefinitionSchema = z.object({
   title: z.string().min(1, "Form title is required"),
   description: z.string().default(""),
   confirmationMessage: z.string().optional(),
+  isQuiz: z.boolean().optional(),
   sections: z.array(FormSectionSchema).min(1, "At least one section is required"),
 });
 

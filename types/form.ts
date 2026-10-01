@@ -38,6 +38,10 @@ export interface FormQuestion {
     includeYear: boolean;
     includeTime: boolean;
   };
+  // Quiz grading (only used when the form's isQuiz is true). correctAnswers hold
+  // option values (choice questions) or accepted answers (short answer).
+  points?: number;
+  correctAnswers?: string[];
 }
 
 export interface FormSection {
@@ -52,6 +56,8 @@ export interface FormDefinition {
   title: string;
   description: string;
   confirmationMessage?: string;
+  // Makes the Google Form a graded quiz (exams, practice tests, knowledge checks).
+  isQuiz?: boolean;
   sections: FormSection[];
 }
 

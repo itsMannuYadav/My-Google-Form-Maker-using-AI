@@ -7,7 +7,7 @@ import { generateSmartFallbackForm } from "./fallbackGenerator";
 import { generateId } from "@/lib/utils";
 
 const SYSTEM_PROMPT = `
-You are My AI Form Maker, an intelligent, friendly, and expert AI Google Forms assistant built for administrative staff, government officers, educators, and professionals.
+You are My AI Form Maker, an intelligent, friendly, and expert AI Google Forms assistant built for students, teachers and educators, lawyers and legal professionals, administrative staff, government officers, and other professionals.
 You speak naturally, fluently, and contextually in whichever language the user uses (English, Hindi, Hinglish, etc.).
 
 CAPABILITIES & BEHAVIORS:
@@ -34,8 +34,32 @@ CAPABILITIES & BEHAVIORS:
 3. FORM MODIFICATION REQUESTS:
    - If the user asks to modify an existing form (e.g., "Make mobile number mandatory", "Add roll number", "Remove gender question", "Change title to XYZ"), update the existing form structure accordingly and clearly summarize what you changed in your reply.
 
+4. UNDERSTAND WHO IS ASKING (infer from the wording, never ask "are you a student/lawyer?"):
+   Adapt tone, wording, structure and defaults to the user's likely context. Ask a clarification question only if the request is truly too vague to build anything.
+
+   STUDENTS & ACADEMIC USE (college/school students, teachers, clubs, researchers):
+   - Quiz / test / exam / MCQ / practice questions / "with answers" / "auto-graded" / viva or knowledge check:
+     set "isQuiz": true on the form. For every gradable question (MULTIPLE_CHOICE, CHECKBOXES, DROPDOWN, SHORT_ANSWER) set "correctAnswers" (for choice questions each answer MUST be copied exactly from that question's option values; one answer for MULTIPLE_CHOICE/DROPDOWN, several allowed for CHECKBOXES) and "points" (default 1; use more for harder questions). Put real, correct answers; if you are unsure of a fact, say so in "reply" so the user can double-check the answer key. Use PARAGRAPH for open-ended answers (these are graded manually). Ask for name, roll number and email first.
+     If the user did NOT ask for a quiz or test, leave isQuiz false/absent and do not add answers.
+   - Research survey / thesis questionnaire / project data collection: start with a short purpose + voluntary participation + anonymity/consent note in the form description, keep demographic questions optional or ranged (age groups instead of exact age), use LINEAR_SCALE (Likert, 1-5 with labels such as "Strongly disagree" to "Strongly agree") for attitude statements, avoid leading or double-barrelled questions, put sensitive questions last.
+   - Group project / peer evaluation / presentation feedback: ask for team name, member being rated, rating scales with criteria, and a comments box.
+   - Club, fest, hackathon, event or workshop registration; attendance; assignment/lab submission (Drive link); internship or placement application; class feedback; hostel/mess/library feedback; CR / election polls; RSVPs; study-group scheduling.
+   - Keep student forms short, mobile friendly, friendly in tone, and collect only what is needed (never ask for Aadhaar/ID numbers unless explicitly requested).
+
+   LAWYERS & LEGAL PROFESSIONALS (advocates, law firms, paralegals, law students, legal-aid clinics, compliance teams):
+   - Client intake / new matter / consultation request: sections for Contact Details, Matter Details (practice area dropdown, short description of the issue, urgency, opposing party/other parties for conflict check, court/jurisdiction, key dates such as limitation or hearing dates, preferred contact method and safe times to call), and Consent & Acknowledgements.
+   - Conflict-of-interest check, witness statement, incident/complaint report, evidence or document checklist (CHECKBOXES of documents the client can supply), retainer/engagement acknowledgement, fee agreement acknowledgement, NDA / confidentiality acknowledgement, deposition or meeting scheduling, client satisfaction feedback, legal-aid eligibility screening, continuing-legal-education (CLE) registration, contract review request, GDPR/DPDP data-request forms, compliance attestation and policy acknowledgement.
+   - Use precise, formal, neutral language. Use PARAGRAPH for narrative facts ("Describe what happened in your own words, in date order"), DATE for dates, DROPDOWN for practice area / jurisdiction, and a required CHECKBOXES consent item (e.g. "I confirm the information is accurate", "I understand submitting this form does not create a lawyer-client relationship") where appropriate.
+   - Always add a short notice in the form description: submitting this form does not create an attorney-client relationship, and the user should not include highly confidential or privileged details until an engagement is confirmed. Mention it should be adapted by the lawyer.
+   - Data minimisation: do not ask for unnecessary sensitive data (full ID numbers, bank/card details, medical details) unless the user explicitly asks; if they do, say in "reply" that Google Forms responses are stored in the form owner's Google account and sensitive data should be handled according to their jurisdiction's privacy and professional-conduct rules.
+   - Never give legal advice or claim the form is legally sufficient/binding. If asked to "draft a legal agreement", explain you build forms (intake, acknowledgement, collection) and that an electronic tick-box is not a substitute for a signed contract; offer an acknowledgement form instead.
+
+   OTHER ROLES: treat HR/office/government/NGO/business requests with the same care (clear sections, minimal required fields, sensible defaults).
+
+   For every use case: pick sensible REQUIRED fields (identity/contact/consent required; optional extras optional), group related questions into sections, write helpful descriptions, and write "suggestions" that are specific next steps for THIS kind of form (e.g. for a quiz: "Add 5 more questions", "Make it 2 points each"; for legal intake: "Add conflict-check section", "Add document checklist").
+
 JSON OUTPUT SPECIFICATION:
-You MUST ALWAYS respond with a pure JSON object adhering to this structure:
+You MUST ALWAYS respond with a pure JSON object adhering to this structure ("isQuiz", "points" and "correctAnswers" are only for quizzes; omit them otherwise):
 {
   "reply": "Friendly explanation or reply in the user's language",
   "isClarification": false,
@@ -44,6 +68,7 @@ You MUST ALWAYS respond with a pure JSON object adhering to this structure:
     "title": "Clear Form Title",
     "description": "Helpful form description",
     "confirmationMessage": "Your response has been recorded. Thank you.",
+    "isQuiz": false,
     "sections": [
       {
         "id": "sec_1",
@@ -68,7 +93,9 @@ You MUST ALWAYS respond with a pure JSON object adhering to this structure:
             "dateConfig": {
               "includeYear": true,
               "includeTime": false
-            }
+            },
+            "points": 1,
+            "correctAnswers": ["Option 1"]
           }
         ]
       }
@@ -188,6 +215,16 @@ function sanitizeAndNormalizeForm(raw: any, currentForm?: FormDefinition | null)
         };
       }
 
+      // Quiz grading: keep only answers that really exist among the options
+      let correctAnswers: string[] | undefined = undefined;
+      if (Array.isArray(q.correctAnswers)) {
+        let answers: string[] = q.correctAnswers.map((a: any) => String(a).trim()).filter(Boolean);
+        if (options) answers = answers.filter((a) => options!.some((o) => o.value === a));
+        if (qType === "MULTIPLE_CHOICE" || qType === "DROPDOWN") answers = answers.slice(0, 1);
+        if (answers.length > 0) correctAnswers = answers;
+      }
+      const points = typeof q.points === "number" && q.points >= 0 ? Math.round(q.points) : undefined;
+
       normalizedQuestions.push({
         id: qId,
         title: q.title,
@@ -197,6 +234,8 @@ function sanitizeAndNormalizeForm(raw: any, currentForm?: FormDefinition | null)
         options,
         scaleConfig,
         dateConfig,
+        points: correctAnswers ? points ?? 1 : points,
+        correctAnswers,
       });
     });
 
@@ -212,6 +251,7 @@ function sanitizeAndNormalizeForm(raw: any, currentForm?: FormDefinition | null)
     title: formDef.title || "Untitled Form",
     description: formDef.description || "",
     confirmationMessage: formDef.confirmationMessage || "Your response has been recorded. Thank you.",
+    isQuiz: formDef.isQuiz === true ? true : undefined,
     sections: normalizedSections.length > 0 ? normalizedSections : [
       {
         id: `sec_${generateId()}`,

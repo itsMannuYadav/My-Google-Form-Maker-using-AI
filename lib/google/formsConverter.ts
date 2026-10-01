@@ -8,6 +8,12 @@ export interface GoogleFormsBatchRequest {
       questionItem?: {
         question: {
           required?: boolean;
+          grading?: {
+            pointValue: number;
+            correctAnswers?: {
+              answers: Array<{ value: string }>;
+            };
+          };
           textQuestion?: {
             paragraph?: boolean;
           };
@@ -53,6 +59,14 @@ export interface GoogleFormsBatchRequest {
       index: number;
     };
   };
+  updateSettings?: {
+    settings: {
+      quizSettings: {
+        isQuiz: boolean;
+      };
+    };
+    updateMask: string;
+  };
 }
 
 /**
@@ -80,7 +94,8 @@ export function buildGoogleFormsUpdateRequests(
 
   const creates = buildGoogleFormsRequests(formDef).batchRequests.filter((r) => r.createItem);
 
-  return [...deletes, infoUpdate, ...creates];
+  // Always sync quiz mode so a form that stops being a quiz is switched back.
+  return [...deletes, infoUpdate, quizSettingsRequest(!!formDef.isQuiz), ...creates];
 }
 
 /**
@@ -109,6 +124,9 @@ export function buildGoogleFormsRequests(formDef: FormDefinition): {
     });
   }
 
+  // Quiz mode must be switched on before any question carries grading.
+  if (formDef.isQuiz) batchRequests.push(quizSettingsRequest(true));
+
   let itemIndex = 0;
 
   formDef.sections.forEach((section, sectionIdx) => {
@@ -130,7 +148,7 @@ export function buildGoogleFormsRequests(formDef: FormDefinition): {
 
     // Insert all questions inside this section
     section.questions.forEach((q) => {
-      const questionItem = buildQuestionItem(q);
+      const questionItem = buildQuestionItem(q, !!formDef.isQuiz);
       if (questionItem) {
         batchRequests.push({
           createItem: {
@@ -151,7 +169,39 @@ export function buildGoogleFormsRequests(formDef: FormDefinition): {
   return { initialInfo, batchRequests };
 }
 
-function buildQuestionItem(q: FormQuestion) {
+function quizSettingsRequest(isQuiz: boolean): GoogleFormsBatchRequest {
+  return {
+    updateSettings: {
+      settings: { quizSettings: { isQuiz } },
+      updateMask: "quizSettings.isQuiz",
+    },
+  };
+}
+
+// Grading is only supported on choice and short-answer questions.
+function buildGrading(q: FormQuestion, isQuiz: boolean) {
+  const gradable = ['SHORT_ANSWER', 'MULTIPLE_CHOICE', 'CHECKBOXES', 'DROPDOWN'].includes(q.type);
+  if (!isQuiz || !gradable) return undefined;
+
+  const answers = (q.correctAnswers || []).filter(
+    (a) => q.type === 'SHORT_ANSWER' || (q.options || []).some((o) => o.value === a)
+  );
+  if (answers.length === 0 && q.points === undefined) return undefined;
+
+  return {
+    pointValue: q.points ?? 1,
+    ...(answers.length > 0 ? { correctAnswers: { answers: answers.map((value) => ({ value })) } } : {}),
+  };
+}
+
+function buildQuestionItem(q: FormQuestion, isQuiz = false) {
+  const item = buildBaseQuestionItem(q);
+  const grading = buildGrading(q, isQuiz);
+  if (grading) item.question = { ...item.question, grading };
+  return item;
+}
+
+function buildBaseQuestionItem(q: FormQuestion): { question: any } {
   const baseQuestion: { required: boolean } = {
     required: !!q.required,
   };

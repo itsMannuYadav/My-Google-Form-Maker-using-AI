@@ -21,6 +21,10 @@ export const metadata: Metadata = {
     "quiz maker",
     "government forms",
     "education forms",
+    "student quiz maker",
+    "research survey",
+    "client intake form",
+    "law firm forms",
   ],
   openGraph: {
     type: "website",

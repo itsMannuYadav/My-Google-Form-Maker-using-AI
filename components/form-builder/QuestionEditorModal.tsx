@@ -10,6 +10,7 @@ interface QuestionEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (updated: FormQuestion) => void;
+  isQuiz?: boolean;
 }
 
 const QUESTION_TYPES: Array<{ label: string; value: QuestionType; description: string }> = [
@@ -28,6 +29,7 @@ export default function QuestionEditorModal({
   isOpen,
   onClose,
   onSave,
+  isQuiz = false,
 }: QuestionEditorModalProps) {
   const [formData, setFormData] = useState<FormQuestion | null>(null);
 
@@ -68,14 +70,30 @@ export default function QuestionEditorModal({
   const handleOptionChange = (index: number, val: string) => {
     if (!formData.options) return;
     const newOptions = [...formData.options];
-    newOptions[index].value = val;
-    setFormData({ ...formData, options: newOptions });
+    const oldVal = newOptions[index].value;
+    newOptions[index] = { ...newOptions[index], value: val };
+    // Keep the answer key attached to the renamed option
+    const correctAnswers = formData.correctAnswers?.map((a) => (a === oldVal ? val : a));
+    setFormData({ ...formData, options: newOptions, correctAnswers });
   };
 
   const handleRemoveOption = (index: number) => {
     if (!formData.options || formData.options.length <= 1) return;
+    const removed = formData.options[index].value;
     const newOptions = formData.options.filter((_, i) => i !== index);
-    setFormData({ ...formData, options: newOptions });
+    const correctAnswers = formData.correctAnswers?.filter((a) => a !== removed);
+    setFormData({ ...formData, options: newOptions, correctAnswers });
+  };
+
+  const toggleCorrect = (value: string) => {
+    const current = formData.correctAnswers || [];
+    const multi = formData.type === "CHECKBOXES";
+    const next = current.includes(value)
+      ? current.filter((a) => a !== value)
+      : multi
+        ? [...current, value]
+        : [value];
+    setFormData({ ...formData, correctAnswers: next, points: formData.points ?? 1 });
   };
 
   const handleSave = (e: React.FormEvent) => {
@@ -85,6 +103,7 @@ export default function QuestionEditorModal({
     onClose();
   };
 
+  const gradable = isQuiz && ["SHORT_ANSWER", "MULTIPLE_CHOICE", "CHECKBOXES", "DROPDOWN"].includes(formData.type);
   const showOptions = ["MULTIPLE_CHOICE", "CHECKBOXES", "DROPDOWN"].includes(formData.type);
 
   return (
@@ -176,6 +195,17 @@ export default function QuestionEditorModal({
               <div className="space-y-2">
                 {formData.options?.map((opt, idx) => (
                   <div key={opt.id || idx} className="flex items-center gap-2">
+                    {gradable && (
+                      <input
+                        type={formData.type === "CHECKBOXES" ? "checkbox" : "radio"}
+                        name="correct-answer"
+                        checked={!!formData.correctAnswers?.includes(opt.value)}
+                        onChange={() => toggleCorrect(opt.value)}
+                        title="Mark as correct answer"
+                        aria-label={`Mark option ${idx + 1} as correct`}
+                        className="h-4 w-4 text-emerald-600 focus:ring-emerald-600 cursor-pointer"
+                      />
+                    )}
                     <span className="text-xs text-slate-400 w-5">{idx + 1}.</span>
                     <input
                       type="text"
@@ -203,6 +233,44 @@ export default function QuestionEditorModal({
                 <Plus className="h-3.5 w-3.5" />
                 <span>Add Option</span>
               </button>
+            </div>
+          )}
+
+          {/* Quiz grading */}
+          {gradable && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 space-y-3">
+              <label className="block text-xs font-semibold text-emerald-800 uppercase tracking-wider">
+                Quiz Grading
+              </label>
+              {formData.type === "SHORT_ANSWER" ? (
+                <input
+                  type="text"
+                  value={formData.correctAnswers?.[0] || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      correctAnswers: e.target.value.trim() ? [e.target.value] : [],
+                      points: formData.points ?? 1,
+                    })
+                  }
+                  placeholder="Correct answer"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 focus:border-gov-700 focus:outline-none"
+                />
+              ) : (
+                <p className="text-xs text-emerald-800">Tick the correct option{formData.type === "CHECKBOXES" ? "s" : ""} above.</p>
+              )}
+              <div className="flex items-center gap-2">
+                <label htmlFor="points-input" className="text-xs font-medium text-slate-700">Points</label>
+                <input
+                  id="points-input"
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={formData.points ?? 1}
+                  onChange={(e) => setFormData({ ...formData, points: Math.max(0, Math.min(100, Math.round(Number(e.target.value) || 0))) })}
+                  className="w-20 rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 focus:border-gov-700 focus:outline-none"
+                />
+              </div>
             </div>
           )}
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { STARTER_PROMPTS } from "@/lib/useCases";
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/AuthContext";
@@ -113,14 +114,9 @@ function CreateFormContent() {
       id: "msg_welcome",
       sender: "assistant",
       content:
-        "Hello! I'm My AI Form Maker, your Google Forms assistant. Describe what information your form should collect (for example: student registration, employee survey, project feedback, or scholarship application) and I will design it for you.",
+        "Hello! I'm My AI Form Maker, your Google Forms assistant. Describe what information your form should collect (for example: a graded quiz, a thesis survey, a client intake form for a law firm, an NDA acknowledgement, or a student registration) and I will design it for you.",
       timestamp: Date.now(),
-      suggestions: [
-        "Registration form for students and teachers",
-        "Student project submission and feedback form",
-        "Citizen feedback survey with 1-5 ratings",
-        "Scholarship application form",
-      ],
+      suggestions: STARTER_PROMPTS,
     };
     setMessages([welcomeMsg]);
 
@@ -382,12 +378,7 @@ function CreateFormContent() {
         sender: "assistant",
         content: "Ready! Tell me what form you would like to create.",
         timestamp: Date.now(),
-        suggestions: [
-          "Registration form for students and teachers",
-          "Student project feedback form",
-          "Citizen feedback survey",
-          "Scholarship application form",
-        ],
+        suggestions: STARTER_PROMPTS,
       },
     ]);
   };
@@ -510,6 +501,7 @@ function CreateFormContent() {
         isOpen={isEditorOpen}
         onClose={() => setIsEditorOpen(false)}
         onSave={handleSaveQuestionEdit}
+        isQuiz={!!formDef?.isQuiz}
       />
 
       {/* Confirmation Before Creation Modal (Section 17) */}

@@ -20,6 +20,21 @@ interface Update {
 
 const UPDATES: Update[] = [
   {
+    icon: Sparkles,
+    tag: "New",
+    title: "Made for students and lawyers too",
+    body: (
+      <>
+        The AI now recognises what you are doing. Ask for a quiz and you get a real{" "}
+        <strong>auto-graded Google Form quiz</strong> with an answer key and points. Ask for a thesis survey and it adds
+        a consent note, Likert scales and optional demographics. Lawyers can start from a{" "}
+        <strong>client intake</strong>, witness statement or NDA acknowledgement with consent checkboxes and a
+        no-attorney-client-relationship notice. Browse the new templates by audience on the home page.
+      </>
+    ),
+    shots: [],
+  },
+  {
     icon: RefreshCw,
     tag: "New",
     title: "Update a published form — same link, no duplicates",
@@ -140,7 +155,7 @@ export default function WhatsNewPage() {
 
           <div className="space-y-6">
             {UPDATES.map((u) => {
-              const phoneOnly = u.shots.every((s) => s.frame === "phone");
+              const phoneOnly = u.shots.length > 0 && u.shots.every((s) => s.frame === "phone");
               return (
                 <article key={u.title} className="rounded-2xl bg-white p-6 sm:p-8 border border-slate-200 shadow-xs space-y-5">
                   <div className="flex items-start gap-3">

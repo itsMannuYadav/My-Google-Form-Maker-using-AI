@@ -16,7 +16,7 @@ export const siteConfig = {
   shortName: "Form Maker",
   tagline: "Google Forms Assistant",
   description:
-    "Describe the form you need in plain language and publish it straight to Google Forms. Built for government officers, administrative staff, and educators.",
+    "Describe the form you need in plain language and publish it straight to Google Forms. Built for students, teachers, lawyers and legal teams, government officers, and administrative staff.",
   url: resolveSiteUrl(process.env.NEXT_PUBLIC_APP_URL),
   themeColor: "#1a365d",
   backgroundColor: "#f8fafc",

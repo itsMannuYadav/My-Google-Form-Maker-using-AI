@@ -22,9 +22,16 @@ import {
   Smartphone,
   Edit3,
   BookOpen,
+  Scale,
+  ClipboardCheck,
 } from "lucide-react";
+import { FORM_TEMPLATES, AUDIENCE_LABELS, type Audience, type FormTemplate } from "@/lib/useCases";
 import Footer from "@/components/Footer";
 import Screenshot from "@/components/Screenshot";
+
+const TEMPLATE_ICONS: Record<FormTemplate["icon"], React.ElementType> = {
+  GraduationCap, Scale, FileText, Users, Zap, Layers, Building, ClipboardCheck,
+};
 
 function FeatureRow({
   icon: Icon,
@@ -71,6 +78,7 @@ function FeatureRow({
 export default function LandingPage() {
   const router = useRouter();
   const [demoPrompt, setDemoPrompt] = useState("");
+  const [audience, setAudience] = useState<Audience>("students");
 
   const handleStartWithPrompt = (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,7 +119,7 @@ export default function LandingPage() {
                   type="text"
                   value={demoPrompt}
                   onChange={(e) => setDemoPrompt(e.target.value)}
-                  placeholder="e.g. Create a registration form for students and teachers with separate sections..."
+                  placeholder="e.g. A 10-question quiz with answers, a client intake form for my law firm, or a thesis survey..."
                   className="w-full px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none bg-transparent"
                 />
                 <button
@@ -332,56 +340,39 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-xs font-semibold text-gov-800 uppercase tracking-wider">Popular Form Templates</h2>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900">Built for real administrative tasks</p>
-            <p className="mt-3 text-sm text-slate-600">Click any template to open it in the builder and start customising.</p>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900">Built for classrooms, law firms and offices</p>
+            <p className="mt-3 text-sm text-slate-600">Pick your world, then click any template to open it in the builder and start customising.</p>
+          </div>
+
+          <div role="tablist" aria-label="Template audience" className="mb-10 flex flex-wrap justify-center gap-2">
+            {(Object.keys(AUDIENCE_LABELS) as Audience[]).map((key) => (
+              <button
+                key={key}
+                role="tab"
+                aria-selected={audience === key}
+                onClick={() => setAudience(key)}
+                className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition-colors ${
+                  audience === key
+                    ? "border-gov-800 bg-gov-800 text-white"
+                    : "border-slate-300 bg-white text-slate-700 hover:border-gov-300"
+                }`}
+              >
+                {AUDIENCE_LABELS[key]}
+              </button>
+            ))}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                icon: GraduationCap,
-                title: "Student & Faculty Registration",
-                prompt: "Create a registration form for students and teachers with separate sections",
-                desc: "Collects contact info, roll numbers, subjects, and categorizes applicants.",
-              },
-              {
-                icon: Building,
-                title: "Scholarship Applications",
-                prompt: "Create a scholarship application form with personal and academic details",
-                desc: "Includes date of birth, income brackets, institution name, and verification fields.",
-              },
-              {
-                icon: Users,
-                title: "Citizen Feedback Surveys",
-                prompt: "Create a feedback survey with 1 to 5 rating scales and comments",
-                desc: "Captures satisfaction metrics, service feedback, and suggestions.",
-              },
-              {
-                icon: FileText,
-                title: "Staff Leave & Duty Requisitions",
-                prompt: "Create a staff leave application with dates, reason and designation",
-                desc: "Organized fields for department, leave type, date range, and emergency contacts.",
-              },
-              {
-                icon: Zap,
-                title: "Event & Workshop Attendance",
-                prompt: "Create a workshop registration form with session selection dropdown",
-                desc: "Includes time preference dropdowns, organization names, and attendance confirmation.",
-              },
-              {
-                icon: Layers,
-                title: "Inspection & Audit Checklist",
-                prompt: "Create an inspection form with checkboxes and ratings",
-                desc: "Structured checklist format for official assessments and field reports.",
-              },
-            ].map((item, idx) => (
+            {FORM_TEMPLATES.filter((t) => t.audience === audience).map((item, idx) => {
+              const Icon = TEMPLATE_ICONS[item.icon];
+              return (
               <div
                 key={idx}
                 className="rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-sm hover:border-gov-300 transition-all flex flex-col justify-between"
               >
                 <div className="space-y-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gov-800 text-white">
-                    <item.icon className="h-5 w-5" />
+                    <Icon className="h-5 w-5" />
                   </div>
                   <h3 className="text-base font-semibold text-slate-900">{item.title}</h3>
                   <p className="text-xs text-slate-600 leading-relaxed">{item.desc}</p>
@@ -397,7 +388,8 @@ export default function LandingPage() {
                   </button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

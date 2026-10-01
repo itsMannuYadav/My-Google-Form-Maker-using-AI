@@ -1,6 +1,7 @@
 import { FormDefinition, FormQuestion, FormSection } from "@/types/form";
 import { AIFormResponseType } from "@/lib/validation/formSchema";
 import { generateId } from "@/lib/utils";
+import { matchDomainTemplate } from "./domainTemplates";
 
 /**
  * Intelligent Conversational Assistant & Form Generation Engine.
@@ -236,6 +237,12 @@ export function generateSmartFallbackForm(
         };
       }
     }
+  }
+
+  // Student, research and legal templates (fresh forms only, never overwrite a draft)
+  if (!currentForm) {
+    const domain = matchDomainTemplate(lower);
+    if (domain) return domain;
   }
 
   // =========================================================================

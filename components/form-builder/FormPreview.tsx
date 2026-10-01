@@ -231,8 +231,17 @@ export default function FormPreview({
               </div>
             )}
 
-            <div className="pt-2 border-t border-slate-100 flex items-center gap-2 text-xs text-red-600 font-medium">
+            <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-red-600 font-medium">
               <span>* Indicates required question</span>
+              <label className="inline-flex items-center gap-1.5 text-slate-600 font-medium cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!formDef.isQuiz}
+                  onChange={(e) => onUpdateForm({ ...formDef, isQuiz: e.target.checked })}
+                  className="h-3.5 w-3.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-600"
+                />
+                <span>Quiz mode (auto-graded)</span>
+              </label>
             </div>
           </div>
         </div>
@@ -287,6 +296,11 @@ export default function FormPreview({
                     </div>
                     {q.description && (
                       <p className="text-xs text-slate-500 mt-0.5 pl-6">{q.description}</p>
+                    )}
+                    {formDef.isQuiz && q.correctAnswers && q.correctAnswers.length > 0 && (
+                      <p className="text-xs text-emerald-700 mt-1 pl-6">
+                        Answer: {q.correctAnswers.join(", ")} · {q.points ?? 1} {(q.points ?? 1) === 1 ? "point" : "points"}
+                      </p>
                     )}
                   </div>
 
