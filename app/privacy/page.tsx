@@ -84,6 +84,15 @@ export default function PrivacyPolicyPage() {
               files are processed in memory and are not saved by My AI Form Maker. Avoid uploading
               documents that contain personal or sensitive information you do not want processed.
             </p>
+            <p>
+              <span className="font-semibold text-slate-800">Your own Gemini API key (optional).</span>{" "}
+              If you add a Google Gemini API key, it is stored only in your browser&apos;s local
+              storage. It is sent to our server with each AI request and forwarded to Google solely
+              to process that request. We do not save or log it. In that case your prompts and files
+              go to Google (Gemini API) instead of Groq and are governed by Google&apos;s terms; on
+              Google&apos;s free tier, Google may use them to improve its products. You can remove
+              the key at any time from the builder.
+            </p>
           </Section>
 
           <Section title="3. Information We Do Not Collect">
@@ -134,6 +143,10 @@ export default function PrivacyPolicyPage() {
               <li>
                 <span className="font-semibold text-slate-800">Groq.</span> Processes your typed
                 prompts and any files you attach to generate form structure.
+              </li>
+              <li>
+                <span className="font-semibold text-slate-800">Google Gemini API.</span> Only if you
+                add your own API key: processes your prompts and files for that request instead of Groq.
               </li>
             </ul>
             <p>We do not sell or rent your personal information to anyone.</p>

@@ -14,6 +14,8 @@ import { Sparkles, ArrowLeft, Loader2, AlertTriangle, ExternalLink, CheckCircle2
 import Link from "next/link";
 import { generateId } from "@/lib/utils";
 import { downscaleImage } from "@/lib/imageResize";
+import ApiKeyModal from "@/components/form-builder/ApiKeyModal";
+import { getStoredGeminiKey, storeGeminiKey, clearStoredGeminiKey } from "@/lib/geminiKey";
 
 function CreateFormContent() {
   const searchParams = useSearchParams();
@@ -30,6 +32,8 @@ function CreateFormContent() {
   const [loadingExistingForm, setLoadingExistingForm] = useState(Boolean(editFormId));
   const [isPublishing, setIsPublishing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [geminiKey, setGeminiKey] = useState("");
+  const [keyModal, setKeyModal] = useState<{ open: boolean; notice?: string | null }>({ open: false });
   const [mobileTab, setMobileTab] = useState<"chat" | "preview">("chat");
 
   // Question modal editor
@@ -76,6 +80,10 @@ function CreateFormContent() {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
+
+  useEffect(() => {
+    setGeminiKey(getStoredGeminiKey());
+  }, []);
 
   // Initial welcome message, or load an existing saved form for editing
   useEffect(() => {
@@ -125,6 +133,12 @@ function CreateFormContent() {
     }
   }, [initialPrompt, editFormId]);
 
+  // Read at send time: the first prompt can fire before the key state has loaded.
+  const keyHeaders = (): Record<string, string> => {
+    const key = geminiKey || getStoredGeminiKey();
+    return key ? { "x-gemini-api-key": key } : {};
+  };
+
   const handleSendMessage = async (userPrompt: string, file?: File) => {
     if ((!userPrompt.trim() && !file) || loading) return;
 
@@ -152,11 +166,11 @@ function CreateFormContent() {
         body.append("prompt", userPrompt);
         body.append("chatHistory", JSON.stringify(newHistory));
         body.append("currentForm", JSON.stringify(formDef));
-        response = await fetch("/api/groq/generate", { method: "POST", body });
+        response = await fetch("/api/groq/generate", { method: "POST", body, headers: keyHeaders() });
       } else {
         response = await fetch("/api/groq/generate", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...keyHeaders() },
           body: JSON.stringify({
             prompt: userPrompt,
             chatHistory: newHistory,
@@ -173,6 +187,7 @@ function CreateFormContent() {
             ...prev,
             { id: generateId("msg"), sender: "assistant", content: data.error, timestamp: Date.now() },
           ]);
+          if (data.keyProblem === "invalid") setKeyModal({ open: true, notice: data.error });
           return;
         }
         throw new Error(data.error || "Failed to process form request.");
@@ -474,6 +489,8 @@ function CreateFormContent() {
             onSendMessage={handleSendMessage}
             onResetChat={() => setShowResetModal(true)}
             onUndoMessage={handleUndoMessage}
+            hasOwnKey={Boolean(geminiKey)}
+            onOpenApiKey={() => setKeyModal({ open: true })}
           />
         </div>
 
@@ -565,6 +582,26 @@ function CreateFormContent() {
       )}
 
       {/* Reset Confirmation Modal */}
+      {keyModal.open && (
+        <ApiKeyModal
+          currentKey={geminiKey}
+          notice={keyModal.notice}
+          onClose={() => setKeyModal({ open: false })}
+          onSave={(key) => {
+            storeGeminiKey(key);
+            setGeminiKey(key);
+            setKeyModal({ open: false });
+            showToast("Gemini key saved. Your requests now use your own quota.");
+          }}
+          onRemove={() => {
+            clearStoredGeminiKey();
+            setGeminiKey("");
+            setKeyModal({ open: false });
+            showToast("Key removed. Using the shared AI again.");
+          }}
+        />
+      )}
+
       {showResetModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
           <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 space-y-4">

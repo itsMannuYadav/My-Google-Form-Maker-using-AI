@@ -3,7 +3,7 @@
 import { QUICK_EXAMPLES } from "@/lib/useCases";
 import React, { useState, useRef, useEffect } from "react";
 import { ChatMessage } from "@/types/form";
-import { Send, Sparkles, User, Bot, HelpCircle, ArrowRight, Loader2, RefreshCw, Copy, Check, Undo2, Paperclip, X, FileText, Image as ImageIcon } from "lucide-react";
+import { Send, Sparkles, User, Bot, HelpCircle, ArrowRight, Loader2, RefreshCw, Copy, Check, Undo2, Paperclip, X, FileText, Image as ImageIcon, KeyRound } from "lucide-react";
 
 const ACCEPTED_FILES = ".jpg,.jpeg,.png,.webp,.pdf,.docx";
 const MAX_DOC_BYTES = 4 * 1024 * 1024;
@@ -32,6 +32,8 @@ interface ChatPanelProps {
   onSendMessage: (text: string, file?: File) => void;
   onResetChat?: () => void;
   onUndoMessage?: (message: ChatMessage) => void;
+  hasOwnKey?: boolean;
+  onOpenApiKey?: () => void;
 }
 
 export default function ChatPanel({
@@ -40,6 +42,8 @@ export default function ChatPanel({
   onSendMessage,
   onResetChat,
   onUndoMessage,
+  hasOwnKey,
+  onOpenApiKey,
 }: ChatPanelProps) {
   const [input, setInput] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -219,6 +223,21 @@ export default function ChatPanel({
             </div>
           </div>
 
+          <div className="flex items-center gap-1">
+          {onOpenApiKey && (
+            <button
+              onClick={onOpenApiKey}
+              title={hasOwnKey ? "Using your own Gemini key" : "Add your own free Gemini API key"}
+              className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors cursor-pointer ${
+                hasOwnKey
+                  ? "text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-200/60"
+              }`}
+            >
+              <KeyRound className="h-3 w-3" />
+              <span>{hasOwnKey ? "Own key" : "Own API key"}</span>
+            </button>
+          )}
           {onResetChat && (
             <button
               onClick={onResetChat}
@@ -229,6 +248,7 @@ export default function ChatPanel({
               <span>Restart</span>
             </button>
           )}
+          </div>
         </div>
 
         {/* Messages List */}

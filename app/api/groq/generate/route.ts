@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processUserFormRequest, GroqRateLimitError } from "@/lib/groq/formGenerator";
+import { GeminiKeyError } from "@/lib/groq/geminiClient";
 import { extractAttachment, AttachmentError, FormAttachment } from "@/lib/groq/fileExtraction";
 import { ChatMessage, FormDefinition } from "@/types/form";
 
@@ -45,12 +46,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await processUserFormRequest(prompt, chatHistory, currentForm, attachment);
+    const result = await processUserFormRequest(
+      prompt,
+      chatHistory,
+      currentForm,
+      attachment,
+      req.headers.get("x-gemini-api-key")?.trim() || undefined
+    );
 
     return NextResponse.json(result);
   } catch (error: any) {
     if (error instanceof AttachmentError) {
       return NextResponse.json({ error: error.message, userFacing: true }, { status: error.status });
+    }
+    if (error instanceof GeminiKeyError) {
+      const status = error.problem === "invalid" ? 401 : error.problem === "rate-limit" ? 429 : 502;
+      return NextResponse.json(
+        { error: error.message, userFacing: true, keyProblem: error.problem },
+        { status }
+      );
     }
     if (error instanceof GroqRateLimitError) {
       return NextResponse.json({ error: error.message, userFacing: true }, { status: 429 });

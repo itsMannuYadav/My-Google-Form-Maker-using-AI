@@ -5,6 +5,7 @@ import { FormDefinition, ChatMessage, FormQuestion, FormSection } from "@/types/
 import { AIFormResponseSchema, AIFormResponseType } from "@/lib/validation/formSchema";
 import { generateSmartFallbackForm } from "./fallbackGenerator";
 import { generateId } from "@/lib/utils";
+import { generateWithGemini } from "./geminiClient";
 
 const SYSTEM_PROMPT = `
 You are My AI Form Maker, an intelligent, friendly, and expert AI Google Forms assistant built for students, teachers and educators, lawyers and legal professionals, administrative staff, government officers, and other professionals.
@@ -273,8 +274,42 @@ export async function processUserFormRequest(
   userMessage: string,
   chatHistory: ChatMessage[],
   currentForm?: FormDefinition | null,
-  attachment?: FormAttachment
+  attachment?: FormAttachment,
+  userGeminiKey?: string
 ): Promise<AIFormResponseType> {
+  // Bring-your-own-key: the user's Gemini key handles this request instead of our Groq key.
+  if (userGeminiKey) {
+    const promptContent = currentForm
+      ? `Current Form Draft:\n${JSON.stringify(currentForm, null, 2)}\n\nUser Request: ${userMessage}`
+      : `User Request: ${userMessage}`;
+    let text = promptContent;
+    if (attachment?.kind === "image") {
+      text += `\n\n(Attached image: ${attachment.name})`;
+    } else if (attachment?.kind === "document") {
+      const note = attachment.truncated ? "\n[Document was long and has been truncated.]" : "";
+      text += `\n\nAttached document "${attachment.name}":\n<document>\n${attachment.text}\n</document>${note}`;
+    }
+    const history = chatHistory.slice(-6).map((msg) => ({
+      role: msg.sender === "user" ? ("user" as const) : ("assistant" as const),
+      content: msg.content,
+    }));
+    const responseText = await generateWithGemini(
+      userGeminiKey,
+      attachment ? SYSTEM_PROMPT + ATTACHMENT_PROMPT : SYSTEM_PROMPT,
+      history,
+      text,
+      attachment
+    );
+    let parsed: any;
+    try {
+      parsed = JSON.parse(responseText);
+    } catch {
+      throw new Error("Gemini returned an unreadable response. Please try again.");
+    }
+    const validated = AIFormResponseSchema.safeParse(parsed);
+    return validated.success ? validated.data : sanitizeAndNormalizeForm(parsed, currentForm);
+  }
+
   const apiKey = process.env.GROQ_API_KEY;
 
   if (!apiKey || apiKey.trim() === "") {
