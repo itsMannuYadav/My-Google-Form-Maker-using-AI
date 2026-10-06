@@ -132,12 +132,14 @@ export async function POST(req: NextRequest) {
         errorMessage.includes("forms.body") ||
         errorMessage.includes("invalid_grant");
 
-      const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "gov-form-maker-mannu";
-      const enableUrl = `https://console.cloud.google.com/apis/library/forms.googleapis.com?project=${projectId}`;
+      const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+      const enableUrl = projectId
+        ? `https://console.cloud.google.com/apis/library/forms.googleapis.com?project=${projectId}`
+        : "https://console.cloud.google.com/apis/library/forms.googleapis.com";
 
       let userFriendlyMsg = "We could not create the Google Form in your Google Drive.";
       if (isApiDisabled) {
-        userFriendlyMsg = `The Google Forms API is not yet enabled on your Google Cloud Project (${projectId}).`;
+        userFriendlyMsg = `The Google Forms API is not yet enabled on your Google Cloud Project${projectId ? ` (${projectId})` : ""}.`;
       } else if (isPermissionError) {
         userFriendlyMsg = "Your Google account session has expired or requires Google Forms permissions. Please sign out and sign in with Google again.";
       }
