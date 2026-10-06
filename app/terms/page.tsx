@@ -6,7 +6,7 @@ export const metadata = {
 };
 
 const SUPPORT_EMAIL = "yadavmannunsy@gmail.com";
-const EFFECTIVE_DATE = "September 23, 2026";
+const EFFECTIVE_DATE = "October 6, 2026";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -40,7 +40,9 @@ export default function TermsOfServicePage() {
               <a href="/privacy" className="text-gov-700 underline hover:text-gov-900">
                 Privacy Policy
               </a>
-              . If you do not agree, please do not use the service.
+              . If you do not agree, please do not use the service. My AI Form Maker is operated by
+              Mannu Yadav at gform.mannuyadav.me. You must be at least 18 years old, or have the
+              consent of a parent, guardian, or your institution, to use it.
             </p>
           </Section>
 
@@ -55,6 +57,11 @@ export default function TermsOfServicePage() {
               A guest mode lets you try the builder without a Google Account. Guest drafts are
               stored only in your browser, and creating a Google Form requires signing in with
               Google.
+            </p>
+            <p>
+              Form generation is done by third-party AI services: our default provider (Groq), or
+              Google Gemini if you add your own API key. If you use your own key, you are
+              responsible for any usage limits or charges on that key.
             </p>
           </Section>
 
@@ -74,12 +81,30 @@ export default function TermsOfServicePage() {
               . Revoking access will prevent the service from creating or editing forms until you
               sign in again.
             </p>
+            <p>
+              We request only the permissions needed to create and edit the forms you ask for and
+              to save them in your Drive. How we handle Google user data is described in our{" "}
+              <a href="/privacy" className="text-gov-700 underline hover:text-gov-900">
+                Privacy Policy
+              </a>
+              . You must also follow the{" "}
+              <a
+                href="https://policies.google.com/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gov-700 underline hover:text-gov-900"
+              >
+                Google Terms of Service
+              </a>{" "}
+              when using Google Forms and Drive.
+            </p>
           </Section>
 
           <Section title="4. Acceptable Use">
             <p>You agree not to use the service to:</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Create forms for unlawful, fraudulent, or deceptive purposes.</li>
+              <li>Create forms for unlawful, fraudulent, or deceptive purposes, including phishing, or any form that asks respondents for passwords, one-time codes, or payment card details.</li>
+              <li>Send spam or bulk unsolicited messages using forms created with the service.</li>
               <li>Collect sensitive personal data (health records, financial credentials, government IDs) without a lawful basis and appropriate consent from respondents.</li>
               <li>Attempt to disrupt, reverse-engineer, or abuse the service, its APIs, or rate limits.</li>
               <li>Impersonate any person or organization, or misrepresent your affiliation.</li>
@@ -92,6 +117,11 @@ export default function TermsOfServicePage() {
               Forms created through My AI Form Maker live in your own Google Drive, and respondent
               answers are delivered directly to your Google account &mdash; we do not access or
               store them.
+            </p>
+            <p>
+              As the owner of a form, you are responsible for how you collect, use, and protect the
+              responses you receive, including giving respondents any privacy notice and obtaining
+              any consent that applicable law requires.
             </p>
           </Section>
 
@@ -132,7 +162,7 @@ export default function TermsOfServicePage() {
               To the maximum extent permitted by law, My AI Form Maker and its developer are not
               liable for any indirect, incidental, or consequential damages arising from your use
               of the service, including issues with forms created, data submitted by respondents,
-              or third-party services (Google, Groq) the app depends on.
+              or third-party services (Google, Groq, Google Gemini) the app depends on.
             </p>
           </Section>
 
