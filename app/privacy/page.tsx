@@ -5,7 +5,7 @@ export const metadata = {
   description: "How My AI Form Maker collects, uses, and protects your data.",
 };
 
-const SUPPORT_EMAIL = "homeofirstt@gmail.com";
+const SUPPORT_EMAIL = "yadavmannunsy@gmail.com";
 const EFFECTIVE_DATE = "October 6, 2026";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
