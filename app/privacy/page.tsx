@@ -6,7 +6,7 @@ export const metadata = {
 };
 
 const SUPPORT_EMAIL = "homeofirstt@gmail.com";
-const EFFECTIVE_DATE = "September 23, 2026";
+const EFFECTIVE_DATE = "October 6, 2026";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -118,7 +118,46 @@ export default function PrivacyPolicyPage() {
             </ul>
           </Section>
 
-          <Section title="5. Google API Services User Data Policy">
+          <Section title="5. Google User Data & Permissions">
+            <p>
+              When you sign in, we ask Google for the following permissions. We request nothing
+              beyond these:
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>
+                <code className="rounded bg-slate-100 px-1 py-0.5 text-[12px]">forms.body</code>
+                {" "}(see, edit, create, and delete your Google Forms). Used only to create the forms
+                you ask for, and to read and update the forms you previously created with My AI
+                Form Maker.
+              </li>
+              <li>
+                <code className="rounded bg-slate-100 px-1 py-0.5 text-[12px]">drive.file</code>
+                {" "}(access only to files this app creates or that you open with it). Used only so
+                the forms we create are saved in your Google Drive. We cannot see your other Drive
+                files.
+              </li>
+            </ul>
+            <p>
+              We use this Google user data only to provide the form-creation features you request
+              in the app. In particular:
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>We do not use it for advertising, including personalised or retargeted ads.</li>
+              <li>We do not sell it or transfer it to data brokers or information resellers.</li>
+              <li>
+                We do not use it to train or develop AI or machine-learning models. The AI services
+                described above only receive the prompts and files you choose to submit.
+              </li>
+              <li>
+                We do not allow people to read it, except with your consent, to investigate abuse
+                or a security issue, to comply with law, or where it is aggregated and anonymised
+                for internal operations.
+              </li>
+              <li>
+                We do not transfer it to others except as needed to provide the features above, to
+                comply with law, or as part of a merger or sale with notice to you.
+              </li>
+            </ul>
             <p>
               My AI Form Maker&apos;s use and transfer of information received from Google APIs to
               any other app adheres to the{" "}
@@ -130,8 +169,7 @@ export default function PrivacyPolicyPage() {
               >
                 Google API Services User Data Policy
               </a>
-              , including the Limited Use requirements. We only use Google user data to provide
-              and improve the form-creation features described in this policy.
+              , including the Limited Use requirements.
             </p>
           </Section>
 
@@ -167,7 +205,9 @@ export default function PrivacyPolicyPage() {
               >
                 Google Account permissions page
               </a>
-              . To request deletion of your account data, contact us at the email below.
+              . To request deletion of your account data (your profile and saved form records in our
+              database), email us at the address below from your sign-in email. We will delete it
+              within 30 days and confirm by reply.
             </p>
           </Section>
 
@@ -196,7 +236,8 @@ export default function PrivacyPolicyPage() {
 
           <Section title="11. Contact Us">
             <p>
-              Questions about this policy or your data? Email{" "}
+              My AI Form Maker is operated by Mannu Yadav at gform.mannuyadav.me. Questions about
+              this policy or your data? Email{" "}
               <a href={`mailto:${SUPPORT_EMAIL}`} className="text-gov-700 underline hover:text-gov-900">
                 {SUPPORT_EMAIL}
               </a>
