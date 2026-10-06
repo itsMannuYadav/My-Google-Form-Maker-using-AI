@@ -228,7 +228,7 @@ export default function ChatPanel({
             <button
               onClick={onOpenApiKey}
               title={hasOwnKey ? "Using your own Gemini key" : "Add your own free Gemini API key"}
-              className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors cursor-pointer ${
+              className={`flex items-center gap-1 whitespace-nowrap text-xs px-2 py-1 rounded transition-colors cursor-pointer ${
                 hasOwnKey
                   ? "text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
                   : "text-slate-500 hover:text-slate-800 hover:bg-slate-200/60"

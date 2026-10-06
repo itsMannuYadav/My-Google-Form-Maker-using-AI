@@ -86,12 +86,13 @@ export default function PrivacyPolicyPage() {
             </p>
             <p>
               <span className="font-semibold text-slate-800">Your own Gemini API key (optional).</span>{" "}
-              If you add a Google Gemini API key, it is stored only in your browser&apos;s local
-              storage. It is sent to our server with each AI request and forwarded to Google solely
-              to process that request. We do not save or log it. In that case your prompts and files
-              go to Google (Gemini API) instead of Groq and are governed by Google&apos;s terms; on
-              Google&apos;s free tier, Google may use them to improve its products. You can remove
-              the key at any time from the builder.
+              If you add a Google Gemini API key, it stays in your browser (for the current session,
+              or on your device if you choose &quot;remember&quot;) and your browser sends your
+              requests straight to Google. The key never reaches our servers. Your prompts then go to
+              Google (Gemini API) instead of Groq and are governed by Google&apos;s terms; on
+              Google&apos;s free tier, Google may use them to improve its products. If you attach a
+              file, we read it on our server (without your key) and return its content to your browser.
+              You can remove the key at any time from the builder.
             </p>
           </Section>
 

@@ -1,8 +1,8 @@
-import type { FormAttachment } from "./fileExtraction";
+import type { FormAttachment } from "@/lib/groq/fileExtraction";
 
-// Calls the Gemini API (generateContent, v1beta) with a key the user supplied.
+// Calls the Gemini API (generateContent, v1beta) straight from the browser with the user's own key.
 // Docs: https://ai.google.dev/api/generate-content
-// The key is only used for this request: it is never logged or stored.
+// The key never goes through our server.
 const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models";
 
 // Stable models available on Gemini's free tier, best first

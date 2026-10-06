@@ -6,15 +6,17 @@ import { looksLikeGeminiKey } from "@/lib/geminiKey";
 
 interface ApiKeyModalProps {
   currentKey: string;
-  onSave: (key: string) => void;
+  remembered: boolean;
+  onSave: (key: string, remember: boolean) => void;
   onRemove: () => void;
   onClose: () => void;
   notice?: string | null;
 }
 
-export default function ApiKeyModal({ currentKey, onSave, onRemove, onClose, notice }: ApiKeyModalProps) {
+export default function ApiKeyModal({ currentKey, remembered, onSave, onRemove, onClose, notice }: ApiKeyModalProps) {
   const [value, setValue] = useState(currentKey);
   const [error, setError] = useState<string | null>(null);
+  const [remember, setRemember] = useState(remembered);
 
   const handleSave = () => {
     const key = value.trim();
@@ -22,7 +24,7 @@ export default function ApiKeyModal({ currentKey, onSave, onRemove, onClose, not
       setError("That doesn't look like a Gemini API key. Copy the whole key from Google AI Studio.");
       return;
     }
-    onSave(key);
+    onSave(key, remember);
   };
 
   return (
@@ -118,11 +120,26 @@ export default function ApiKeyModal({ currentKey, onSave, onRemove, onClose, not
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-gov-700 focus:outline-none focus:ring-1 focus:ring-gov-700"
           />
           {error && <p className="text-xs text-red-600">{error}</p>}
+          <label className="flex items-start gap-2 pt-0.5 text-[11px] text-slate-700 leading-relaxed cursor-pointer">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              className="mt-0.5 h-3.5 w-3.5 rounded border-slate-300"
+            />
+            <span>
+              Remember on this device. Leave unchecked on a shared or public computer; the key is then
+              forgotten when you close the browser tab.
+            </span>
+          </label>
           <p className="flex items-start gap-1.5 text-[11px] text-slate-500 leading-relaxed">
             <ShieldCheck className="h-3.5 w-3.5 shrink-0 mt-px text-emerald-600" />
-            Saved only in this browser. It is sent with your requests to Google through our server and is
-            never stored or logged by us. Treat it like a password, and delete it from AI Studio if you
-            think it leaked.
+            <span>
+              <span className="font-semibold text-slate-700">Your key never reaches our servers.</span> It
+              stays in this browser and is sent only to Google, straight from your device (you can check
+              this in your browser&apos;s Network tab). Best practice: create a key just for this site, and
+              delete or regenerate it in AI Studio whenever you like.
+            </span>
           </p>
         </div>
 

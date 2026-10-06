@@ -14,6 +14,8 @@ import { Sparkles, ArrowLeft, Loader2, AlertTriangle, ExternalLink, CheckCircle2
 import Link from "next/link";
 import { generateId } from "@/lib/utils";
 import { downscaleImage } from "@/lib/imageResize";
+import { generateWithOwnKey, OwnKeyUserError } from "@/lib/ai/ownKeyGenerate";
+import { GeminiKeyError } from "@/lib/ai/gemini";
 import ApiKeyModal from "@/components/form-builder/ApiKeyModal";
 import { getStoredGeminiKey, storeGeminiKey, clearStoredGeminiKey } from "@/lib/geminiKey";
 
@@ -33,6 +35,7 @@ function CreateFormContent() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [geminiKey, setGeminiKey] = useState("");
+  const [keyRemembered, setKeyRemembered] = useState(false);
   const [keyModal, setKeyModal] = useState<{ open: boolean; notice?: string | null }>({ open: false });
   const [mobileTab, setMobileTab] = useState<"chat" | "preview">("chat");
 
@@ -82,7 +85,9 @@ function CreateFormContent() {
   };
 
   useEffect(() => {
-    setGeminiKey(getStoredGeminiKey());
+    const stored = getStoredGeminiKey();
+    setGeminiKey(stored.key);
+    setKeyRemembered(stored.remembered);
   }, []);
 
   // Initial welcome message, or load an existing saved form for editing
@@ -133,12 +138,6 @@ function CreateFormContent() {
     }
   }, [initialPrompt, editFormId]);
 
-  // Read at send time: the first prompt can fire before the key state has loaded.
-  const keyHeaders = (): Record<string, string> => {
-    const key = geminiKey || getStoredGeminiKey();
-    return key ? { "x-gemini-api-key": key } : {};
-  };
-
   const handleSendMessage = async (userPrompt: string, file?: File) => {
     if ((!userPrompt.trim() && !file) || loading) return;
 
@@ -159,38 +158,67 @@ function CreateFormContent() {
     const formSnapshotBefore = formDef;
 
     try {
-      let response: Response;
-      if (file) {
-        const body = new FormData();
-        body.append("file", await downscaleImage(file));
-        body.append("prompt", userPrompt);
-        body.append("chatHistory", JSON.stringify(newHistory));
-        body.append("currentForm", JSON.stringify(formDef));
-        response = await fetch("/api/groq/generate", { method: "POST", body, headers: keyHeaders() });
-      } else {
-        response = await fetch("/api/groq/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...keyHeaders() },
-          body: JSON.stringify({
-            prompt: userPrompt,
+      const showAssistantError = (content: string) =>
+        setMessages((prev) => [
+          ...prev,
+          { id: generateId("msg"), sender: "assistant", content, timestamp: Date.now() },
+        ]);
+
+      let data: any;
+      const ownKey = geminiKey || getStoredGeminiKey().key;
+
+      if (ownKey) {
+        // The user's own Gemini key is used here in the browser and goes only to Google.
+        try {
+          data = await generateWithOwnKey({
+            apiKey: ownKey,
+            prompt: userPrompt.trim() || "Create a Google Form based on the attached file.",
             chatHistory: newHistory,
             currentForm: formDef,
-          }),
-        });
-      }
-
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        if (data.userFacing) {
-          setMessages((prev) => [
-            ...prev,
-            { id: generateId("msg"), sender: "assistant", content: data.error, timestamp: Date.now() },
-          ]);
-          if (data.keyProblem === "invalid") setKeyModal({ open: true, notice: data.error });
-          return;
+            file: file ? await downscaleImage(file) : undefined,
+          });
+        } catch (err) {
+          if (err instanceof GeminiKeyError) {
+            showAssistantError(err.message);
+            if (err.problem === "invalid") setKeyModal({ open: true, notice: err.message });
+            return;
+          }
+          if (err instanceof OwnKeyUserError) {
+            showAssistantError(err.message);
+            return;
+          }
+          throw err;
         }
-        throw new Error(data.error || "Failed to process form request.");
+      } else {
+        let response: Response;
+        if (file) {
+          const body = new FormData();
+          body.append("file", await downscaleImage(file));
+          body.append("prompt", userPrompt);
+          body.append("chatHistory", JSON.stringify(newHistory));
+          body.append("currentForm", JSON.stringify(formDef));
+          response = await fetch("/api/groq/generate", { method: "POST", body });
+        } else {
+          response = await fetch("/api/groq/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              prompt: userPrompt,
+              chatHistory: newHistory,
+              currentForm: formDef,
+            }),
+          });
+        }
+
+        data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          if (data.userFacing) {
+            showAssistantError(data.error);
+            return;
+          }
+          throw new Error(data.error || "Failed to process form request.");
+        }
       }
 
       const assistantMsg: ChatMessage = {
@@ -585,17 +613,20 @@ function CreateFormContent() {
       {keyModal.open && (
         <ApiKeyModal
           currentKey={geminiKey}
+          remembered={keyRemembered}
           notice={keyModal.notice}
           onClose={() => setKeyModal({ open: false })}
-          onSave={(key) => {
-            storeGeminiKey(key);
+          onSave={(key, remember) => {
+            storeGeminiKey(key, remember);
             setGeminiKey(key);
+            setKeyRemembered(remember);
             setKeyModal({ open: false });
             showToast("Gemini key saved. Your requests now use your own quota.");
           }}
           onRemove={() => {
             clearStoredGeminiKey();
             setGeminiKey("");
+            setKeyRemembered(false);
             setKeyModal({ open: false });
             showToast("Key removed. Using the shared AI again.");
           }}

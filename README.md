@@ -30,7 +30,7 @@ My AI Form Maker is a production-ready web app that lets administrative staff, g
 | Frontend | Next.js 14 (App Router), TypeScript, Tailwind CSS |
 | Authentication | Firebase Authentication (Google OAuth with `forms.body` & `drive.file` scopes) |
 | Database | Firebase Cloud Firestore (with local browser storage fallback) |
-| AI Engine | Optional bring-your-own Google Gemini key (`gemini-3.8-flash`, falling back to `gemini-3.5-flash-lite`), otherwise Groq API (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `qwen/qwen3.8-27b`) with Zod-validated structured output |
+| AI Engine | Optional bring-your-own Google Gemini key (`gemini-3.8-flash`, falling back to `gemini-3.5-flash-lite`), called directly from the browser so the key never reaches our server; otherwise Groq API (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `qwen/qwen3.8-27b`) with Zod-validated structured output |
 | Google Integration | Google Forms API v1, Google Drive API v3 |
 | Icons | Lucide React |
 
